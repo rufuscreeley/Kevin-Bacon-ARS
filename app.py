@@ -3,20 +3,28 @@ import pandas as pd
 import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
-import os
 
 st.set_page_config(page_title="Seis Grados de Kevin Bacon", layout="wide")
 st.title("🎬 Red de Actores: Los Seis Grados de Separación")
 st.write("Escribe parte del nombre de los actores para buscar sus conexiones de forma ultrarrápida.")
 
-# Función para cargar datos de manera eficiente usando caché y mostrando progreso
+# Función para cargar datos de manera eficiente usando URLs públicas de Google Drive
 @st.cache_resource
 def cargar_grafo():
-    with st.spinner("Cargando archivos de datos desde Google Drive..."):
-        folder_path = '/content/drive/MyDrive/Seis grados Kevin Bacon'
-        df_movies = pd.read_csv(os.path.join(folder_path, 'movies.csv'))
-        df_people = pd.read_csv(os.path.join(folder_path, 'people.csv'))
-        df_stars = pd.read_csv(os.path.join(folder_path, 'stars.csv'))
+    # IDs de tus archivos en Google Drive (reemplaza estos IDs por los de tus archivos reales)
+    id_movies = "1ACd7kKcMPBSIDwdDcT5pTY7k2HmbALjG"
+    id_people = "1FVlEcggtRw1IOKB_mLiLIIf-h2bSBwsH"
+    id_stars = "10mp7ybqTJyIt6XPrGUG_L1ABamcwQJ_z"
+
+    # Construcción de las URLs de descarga directa (evitando el aviso de archivos grandes)
+    url_movies = f"https://docs.google.com/uc?export=download&confirm=t&id={id_movies}"
+    url_people = f"https://docs.google.com/uc?export=download&confirm=t&id={id_people}"
+    url_stars = f"https://docs.google.com/uc?export=download&confirm=t&id={id_stars}"
+
+    with st.spinner("Descargando archivos de datos desde Google Drive público..."):
+        df_movies = pd.read_csv(url_movies)
+        df_people = pd.read_csv(url_people)
+        df_stars = pd.read_csv(url_stars)
 
     with st.spinner("Construyendo la estructura del grafo principal..."):
         G = nx.Graph()
@@ -95,7 +103,7 @@ if actor_origen and actor_destino:
                     if attrs['type'] == 'person':
                         net.add_node(node, label=attrs['name'], title=attrs['name'], size=20, color="#007bff", shape="dot")
                     else:
-                        net.add_node(node, label=f"{attrs['title']} ({int(attrs['year'])})", title=attrs['title'], size=15, color="#ffc107", shape="triangle")
+                        net.add_node(node, label=f"{attrs['title']} ({int(attrs['year'])}", title=attrs['title'], size=15, color="#ffc107", shape="triangle")
 
                 for u, v in sub_G.edges():
                     net.add_edge(u, v, color="#cccccc")
