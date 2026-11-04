@@ -5,7 +5,14 @@ from pyvis.network import Network
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Seis Grados de Kevin Bacon", layout="wide")
-st.title("🎬 Kevin Bacon Project")
+header_image, header_title = st.columns([0.08, 0.92], gap="small", vertical_alignment="center")
+with header_image:
+    st.markdown(
+        '<img src="https://hips.hearstapps.com/hmg-prod/images/kevin-bacon-azul-1592514957.jpg?crop=0.668xw:1.00xh;0.187xw,0&resize=1200:*" alt="Kevin Bacon" style="width:72px;height:72px;object-fit:cover;object-position:center;border-radius:3px;">',
+        unsafe_allow_html=True,
+    )
+with header_title:
+    st.title("Kevin Bacon Project")
 st.write("Todos los caminos llevan a Kevin Bacon: explorando la regla de los seis grados de separación en el cine.")
 
 st.sidebar.title("ℹ️ Sobre el proyecto")
