@@ -4,7 +4,7 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Seis Grados de Kevin Bacon", layout="wide")
+st.set_page_config(page_title="Kevin Bacon Project", layout="wide")
 header_image, header_title = st.columns([0.08, 0.92], gap="small", vertical_alignment="center")
 with header_image:
     st.markdown(
