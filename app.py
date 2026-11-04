@@ -5,8 +5,68 @@ from pyvis.network import Network
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Seis Grados de Kevin Bacon", layout="wide")
-st.title("🎬 Red de Actores: Los Seis Grados de Separación")
-st.write("Escribe parte del nombre de los actores para buscar sus conexiones de forma ultrarrápida.")
+st.title("🎬 Kevin Bacon Project")
+st.write("Explora la red del cine con el meme de Kevin Bacon: la idea de que casi cualquier actor puede conectarse con Kevin Bacon en menos de seis grados de separación a través de las películas.")
+
+st.sidebar.title("ℹ️ Sobre el proyecto")
+st.sidebar.markdown(
+    """
+    Este proyecto ha sido desarrollado por [Rafael Carrasco](https://scholar.google.es/citations?user=VxjO4dMAAAAJ&hl=es), profesor de Periodismo de la Universidad Complutense de Madrid.
+
+    Explora cómo están conectados los actores a través de las películas en las que han coincidido.
+
+    La idea es visualizar redes de colaboración cinematográfica y responder preguntas del tipo:
+    - ¿Qué tan cerca están dos actores?
+    - ¿Qué películas unen a dos personas?
+    - ¿Cómo se relaciona un actor con el resto del universo de cine?
+    """
+)
+
+with st.sidebar.expander("🧰 Tecnologías, herramientas y recursos", expanded=False):
+    st.markdown(
+        """
+        - [Python](https://www.python.org/): lenguaje principal del proyecto.
+        - [Streamlit](https://streamlit.io/): framework para crear la interfaz web interactiva.
+        - [Pandas](https://pandas.pydata.org/): manipulación y análisis de datos tabulares.
+        - [NetworkX](https://networkx.org/): librería para modelar y recorrer grafos.
+        - [PyVis](https://pyvis.readthedocs.io/): visualización interactiva de redes y grafos.
+        - [Movies CSV](https://drive.google.com/file/d/1ACd7kKcMPBSIDwdDcT5pTY7k2HmbALjG/view?usp=sharing): archivo con información de películas.
+        - [People CSV](https://drive.google.com/file/d/1FVlEcggtRw1IOKB_mLiLIIf-h2bSBwsH/view?usp=sharing): archivo con información de personas y actores.
+        - [Stars CSV](https://drive.google.com/file/d/10mp7ybqTJyIt6XPrGUG_L1ABamcwQJ_z/view?usp=sharing): archivo con relaciones entre actores y películas.
+        - [requirements.txt](requirements.txt): dependencias del proyecto.
+        """
+    )
+
+with st.expander("¿Qué hace esta aplicación?", expanded=True):
+    st.markdown(
+        """
+        Esta web construye un grafo de actores y películas. Cada actor está conectado a las películas en las que aparece,
+        y cada película conecta a todos los actores que participan en ella.
+
+        A partir de ese grafo, la aplicación puede:
+        - calcular el camino más corto entre dos actores,
+        - contar cuántos pasos los separan,
+        - mostrar la red directa de un actor en una sola película de distancia.
+        """
+    )
+
+with st.expander("¿Cómo se usa?", expanded=False):
+    st.markdown(
+        """
+        1. Elige el modo de consulta: conectar dos actores o explorar la red de un actor.
+        2. Escribe parte del nombre del actor para ver sugerencias automáticas.
+        3. Selecciona un resultado y pulsa el botón de búsqueda.
+        4. Explora el grafo y haz zoom para ver más detalle.
+        """
+    )
+
+with st.expander("¿Qué tipos de consultas ofrece?", expanded=False):
+    st.markdown(
+        """
+        - Conectar dos actores: muestra si están relacionados y cuántos pasos los separan.
+        - Red de un actor: muestra los actores que están a un solo grado de separación a través de una película.
+        """
+    )
 
 # Función para cargar datos de manera eficiente usando URLs públicas de Google Drive
 @st.cache_resource
@@ -48,72 +108,236 @@ except Exception as e:
     st.error(f"Error al cargar los datos de Google Drive: {e}")
     st.stop()
 
-# Buscador inteligente y liviano para evitar saturar el navegador
-col1, col2 = st.columns(2)
+# Búsqueda rápida y pulida con autocompletado en tiempo real.
+NOMBRES_ACTORES = sorted(set_actores)
+NOMBRES_ACTORES_LOWER = [nombre.lower() for nombre in NOMBRES_ACTORES]
 
-with col1:
-    buscar_origen = st.text_input("1. Buscar Actor Origen (ej: Tom Cruise)", value="Tom Cruise")
-    coincidencias_origen = [actor for actor in set_actores if buscar_origen.lower() in actor.lower()][:15]
-    if coincidencias_origen:
-        actor_origen = st.selectbox("Selecciona coincidencia exacta (Origen):", coincidencias_origen)
+
+def sugerencias_actor(texto, nombres, nombres_lower, max_sugerencias=6):
+    texto = (texto or "").strip()
+    if not texto:
+        return []
+    consulta = texto.lower()
+
+    if len(consulta) == 1:
+        return [nombre for nombre, nombre_lower in zip(nombres, nombres_lower) if nombre_lower.startswith(consulta)][:max_sugerencias]
+
+    return [nombre for nombre, nombre_lower in zip(nombres, nombres_lower) if consulta in nombre_lower][:max_sugerencias]
+
+
+def normalizar_actor(texto, nombres, nombres_lower):
+    if not texto:
+        return None
+    nombre = texto.strip()
+    coincidencias = sugerencias_actor(nombre, nombres, nombres_lower)
+    if not coincidencias:
+        return None
+    exact_match = next((item for item in coincidencias if item.lower() == nombre.lower()), None)
+    return exact_match or coincidencias[0]
+
+
+def resaltar_coincidencia(nombre, consulta):
+    if not consulta:
+        return nombre
+    consulta_lower = consulta.lower()
+    idx = nombre.lower().find(consulta_lower)
+    if idx == -1:
+        return nombre
+    return f"{nombre[:idx]}**{nombre[idx:idx + len(consulta)]}**{nombre[idx + len(consulta):]}"
+
+
+if "actor_origen" not in st.session_state:
+    st.session_state.actor_origen = "Tom Cruise"
+if "actor_destino" not in st.session_state:
+    st.session_state.actor_destino = "Kevin Bacon"
+
+
+
+def render_autocompletado(label, key_name, valor_inicial):
+    valor = st.text_input(label, value=valor_inicial, placeholder="Escribe el nombre del actor")
+    st.session_state[key_name] = valor
+
+    if not valor.strip():
+        st.caption("Escribe al menos una letra para ver coincidencias.")
+        return None
+
+    coincidencias = sugerencias_actor(valor, NOMBRES_ACTORES, NOMBRES_ACTORES_LOWER)
+
+    if coincidencias:
+        st.caption("Coincidencias sugeridas")
+        for idx, actor in enumerate(coincidencias):
+            if st.button(
+                resaltar_coincidencia(actor, valor),
+                key=f"{key_name}_{idx}",
+                use_container_width=True,
+            ):
+                st.session_state[key_name] = actor
+                st.rerun()
     else:
-        st.warning("No se encontraron coincidencias para el origen.")
-        actor_origen = None
+        st.caption("No hay coincidencias para la búsqueda actual.")
 
-with col2:
-    buscar_destino = st.text_input("2. Buscar Actor Destino (ej: Kevin Bacon)", value="Kevin Bacon")
-    coincidencias_destino = [actor for actor in set_actores if buscar_destino.lower() in actor.lower()][:15]
-    if coincidencias_destino:
-        actor_destino = st.selectbox("Selecciona coincidencia exacta (Destino):", coincidencias_destino)
+    return normalizar_actor(valor, NOMBRES_ACTORES, NOMBRES_ACTORES_LOWER)
+
+
+modo_busqueda = st.radio(
+    "Elige el tipo de consulta",
+    ["🔗 Conectar dos actores", "🌐 Ver red de un actor"],
+    horizontal=True,
+    index=0,
+)
+
+if modo_busqueda == "🔗 Conectar dos actores":
+    col1, col2 = st.columns(2)
+    with col1:
+        actor_origen = render_autocompletado("1. Actor de origen", "actor_origen", st.session_state.actor_origen)
+    with col2:
+        actor_destino = render_autocompletado("2. Actor de destino", "actor_destino", st.session_state.actor_destino)
+
+    if actor_origen and actor_destino:
+        if st.button("🔍 Conectar Actores", type="primary"):
+            origen_nodes = [n for n, attr in G.nodes(data=True) if attr.get('type') == 'person' and attr.get('name') == actor_origen]
+            destino_nodes = [n for n, attr in G.nodes(data=True) if attr.get('type') == 'person' and attr.get('name') == actor_destino]
+
+            if not origen_nodes or not destino_nodes:
+                st.warning("No se pudo localizar uno de los actores seleccionados.")
+            else:
+                id_origen = origen_nodes[0]
+                id_destino = destino_nodes[0]
+
+                try:
+                    camino = nx.shortest_path(G, source=id_origen, target=id_destino)
+                    grados = (len(camino) - 1) // 2
+
+                    st.info(f"### 📊 Ficha Informativa: {grados} grados de separación entre {actor_origen} y {actor_destino}")
+
+                    puentes = [G.nodes[n]['name'] for n in camino if G.nodes[n]['type'] == 'person'][1:-1]
+                    if puentes:
+                        st.write(f"**Nodos que hacen de puente/conexión:** {', '.join(puentes)}")
+                    else:
+                        st.write("**Conexión directa:** Actuaron en la misma película.")
+
+                    sub_G = G.subgraph(camino)
+
+                    net = Network(height="350px", width="100%", bgcolor="#f8f9fa", font_color="black", notebook=False)
+                    net.force_atlas_2based(overlap=1)
+                    net.set_options("""
+                    {
+                      "physics": {
+                        "enabled": true,
+                        "solver": "forceAtlas2Based",
+                        "forceAtlas2Based": {
+                          "gravitationalConstant": -50,
+                          "centralGravity": 0.01,
+                          "springConstant": 0.08,
+                          "springLength": 120,
+                          "damping": 0.4,
+                          "avoidOverlap": 1
+                        },
+                        "minVelocity": 0.75,
+                        "maxVelocity": 50
+                      },
+                      "interaction": {
+                        "hover": true,
+                        "zoomView": true,
+                        "dragView": true,
+                        "multiselect": true,
+                        "navigationButtons": true
+                      }
+                    }
+                    """)
+
+                    for node in sub_G.nodes():
+                        attrs = G.nodes[node]
+                        if attrs['type'] == 'person':
+                            net.add_node(node, label=attrs['name'], title=attrs['name'], size=20, color="#007bff", shape="dot")
+                        else:
+                            net.add_node(node, label=f"{attrs['title']} ({int(attrs['year'])})", title=attrs['title'], size=15, color="#ffc107", shape="triangle")
+
+                    for u, v in sub_G.edges():
+                        net.add_edge(u, v, color="#cccccc")
+
+                    net.save_graph("path_graph.html")
+                    with open("path_graph.html", 'r', encoding='utf-8') as HtmlFile:
+                        source_code = HtmlFile.read()
+                    components.html(source_code, height=380)
+
+                except nx.NetworkXNoPath:
+                    st.error(f"No existe conexión alguna entre {actor_origen} y {actor_destino} dentro del grafo actual.")
     else:
-        st.warning("No se encontraron coincidencias para el destino.")
-        actor_destino = None
+        st.info("Completa ambos campos con nombres válidos para visualizar la conexión entre actores.")
+else:
+    actor_origen = render_autocompletado("Actor a explorar", "actor_origen", st.session_state.actor_origen)
 
-if actor_origen and actor_destino:
-    if st.button("🔍 Conectar Actores"):
+    if actor_origen:
         origen_nodes = [n for n, attr in G.nodes(data=True) if attr.get('type') == 'person' and attr.get('name') == actor_origen]
-        destino_nodes = [n for n, attr in G.nodes(data=True) if attr.get('type') == 'person' and attr.get('name') == actor_destino]
-
-        if not origen_nodes or not destino_nodes:
-            st.warning("No se pudo localizar uno de los actores seleccionados.")
+        if not origen_nodes:
+            st.warning("No se pudo localizar el actor seleccionado.")
         else:
             id_origen = origen_nodes[0]
-            id_destino = destino_nodes[0]
+            peliculas_conexas = [n for n in G.neighbors(id_origen) if G.nodes[n].get('type') == 'movie']
+            actores_vecinos = []
 
-            try:
-                camino = nx.shortest_path(G, source=id_origen, target=id_destino)
-                grados = (len(camino) - 1) // 2
+            for movie_node in peliculas_conexas:
+                for neighbor in G.neighbors(movie_node):
+                    if G.nodes[neighbor].get('type') == 'person' and neighbor != id_origen:
+                        actores_vecinos.append(neighbor)
 
-                st.info(f"### 📊 Ficha Informativa: {grados} grados de separación entre {actor_origen} y {actor_destino}")
+            actores_vecinos = sorted(set(actores_vecinos), key=lambda node: G.nodes[node]['name'])
+            nodos_red = {id_origen} | set(peliculas_conexas) | set(actores_vecinos)
+            sub_G = G.subgraph(nodos_red)
 
-                puentes = [G.nodes[n]['name'] for n in camino if G.nodes[n]['type'] == 'person'][1:-1]
-                if puentes:
-                    st.write(f"**Nodos que hacen de puente/conexión:** {', '.join(puentes)}")
-                else:
-                    st.write("**Conexión directa:** Actuaron en la misma película.")
+            actores_red = sorted({G.nodes[n]['name'] for n in sub_G.nodes() if G.nodes[n].get('type') == 'person'})
+            total_actores = len(actores_red)
+            total_peliculas = len({G.nodes[n]['title'] for n in sub_G.nodes() if G.nodes[n].get('type') == 'movie'})
 
-                sub_G = G.subgraph(camino)
+            if total_actores == 0:
+                st.info(f"### 🌐 {actor_origen} no tiene actores conectados a un grado de separación.")
+            else:
+                st.info(f"### 🌐 {actor_origen} está conectado directamente con {total_actores} actores a través de {total_peliculas} película(s)")
+                st.write(f"Actores en primer grado: {', '.join(actores_red)}")
 
-                # Configuración ultra liviana de Pyvis sin físicas para asegurar rendimiento
-                net = Network(height="350px", width="100%", bgcolor="#f8f9fa", font_color="black", notebook=False)
-                net.toggle_physics(False)
+                net = Network(height="450px", width="100%", bgcolor="#f8f9fa", font_color="black", notebook=False)
+                net.force_atlas_2based(overlap=1)
+                net.set_options("""
+                {
+                  "physics": {
+                    "enabled": true,
+                    "solver": "forceAtlas2Based",
+                    "forceAtlas2Based": {
+                      "gravitationalConstant": -50,
+                      "centralGravity": 0.01,
+                      "springConstant": 0.08,
+                      "springLength": 120,
+                      "damping": 0.4,
+                      "avoidOverlap": 1
+                    },
+                    "minVelocity": 0.75,
+                    "maxVelocity": 50
+                  },
+                  "interaction": {
+                    "hover": true,
+                    "zoomView": true,
+                    "dragView": true,
+                    "multiselect": true,
+                    "navigationButtons": true
+                  }
+                }
+                """)
 
                 for node in sub_G.nodes():
                     attrs = G.nodes[node]
                     if attrs['type'] == 'person':
-                        net.add_node(node, label=attrs['name'], title=attrs['name'], size=20, color="#007bff", shape="dot")
+                        color = "#28a745" if node == id_origen else "#007bff"
+                        net.add_node(node, label=attrs['name'], title=attrs['name'], size=20, color=color, shape="dot")
                     else:
-                        net.add_node(node, label=f"{attrs['title']} ({int(attrs['year'])}", title=attrs['title'], size=15, color="#ffc107", shape="triangle")
+                        net.add_node(node, label=f"{attrs['title']} ({int(attrs['year'])})", title=attrs['title'], size=15, color="#ffc107", shape="triangle")
 
                 for u, v in sub_G.edges():
                     net.add_edge(u, v, color="#cccccc")
 
-                net.save_graph("path_graph.html")
-                HtmlFile = open("path_graph.html", 'r', encoding='utf-8')
-                source_code = HtmlFile.read()
-                components.html(source_code, height=380)
-
-            except nx.NetworkXNoPath:
-                st.error(f"No existe conexión alguna entre {actor_origen} y {actor_destino} dentro del grafo actual.")
-else:
-    st.info("Por favor, selecciona coincidencias válidas de los desplegables filtrados para habilitar la búsqueda.")
+                net.save_graph("actor_network.html")
+                with open("actor_network.html", 'r', encoding='utf-8') as HtmlFile:
+                    source_code = HtmlFile.read()
+                components.html(source_code, height=450)
+    else:
+        st.info("Escribe un nombre de actor para ver sus conexiones directas por películas.")
