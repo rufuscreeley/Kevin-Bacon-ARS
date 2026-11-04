@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Seis Grados de Kevin Bacon", layout="wide")
 st.title("🎬 Kevin Bacon Project")
-st.write("Explora la red del cine con el meme de Kevin Bacon: la idea de que casi cualquier actor puede conectarse con Kevin Bacon en menos de seis grados de separación a través de las películas.")
+st.write("Todos los caminos llevan a Kevin Bacon: explorando la regla de los seis grados de separación en el cine.")
 
 st.sidebar.title("ℹ️ Sobre el proyecto")
 st.sidebar.markdown(
