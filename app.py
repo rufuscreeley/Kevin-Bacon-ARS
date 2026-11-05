@@ -13,7 +13,8 @@ with header_image:
     )
 with header_title:
     st.title("Kevin Bacon Project")
-st.write("Todos los caminos llevan a Kevin Bacon: explorando la regla de los seis grados de separación en el cine.")
+st.markdown("Todos los caminos llevan a Kevin Bacon: explorando la [regla de los seis grados de separación](https://en.wikipedia.org/wiki/Six_Degrees_of_Kevin_Bacon) en el cine.")
+metricas_portada = st.empty()
 
 st.sidebar.title("ℹ️ Sobre el proyecto")
 st.sidebar.markdown(
@@ -40,9 +41,19 @@ with st.sidebar.expander("🧰 Tecnologías, herramientas y recursos", expanded=
         - [Movies CSV](https://drive.google.com/file/d/1ACd7kKcMPBSIDwdDcT5pTY7k2HmbALjG/view?usp=sharing): archivo con información de películas.
         - [People CSV](https://drive.google.com/file/d/1FVlEcggtRw1IOKB_mLiLIIf-h2bSBwsH/view?usp=sharing): archivo con información de personas y actores.
         - [Stars CSV](https://drive.google.com/file/d/10mp7ybqTJyIt6XPrGUG_L1ABamcwQJ_z/view?usp=sharing): archivo con relaciones entre actores y películas.
-        - [requirements.txt](requirements.txt): dependencias del proyecto.
+        - Dataset original: [IMDb Co-star Network. The Kevin Bacon Game: Finding Six Degrees of Separation in Movie Data](https://www.kaggle.com/datasets/parthparmar06/imdb-co-star-network).
+        - [requirements.txt](https://github.com/rufuscreeley/Kevin-Bacon-ARS/blob/main/requirements.txt): dependencias del proyecto.
         """
     )
+
+st.sidebar.markdown(
+    """
+    ---
+    [![Licencia Creative Commons](https://i.creativecommons.org/l/by-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
+
+    Este proyecto está bajo una [Licencia Creative Commons Atribución-CompartirIgual 4.0 Internacional](https://creativecommons.org/licenses/by-sa/4.0/).
+    """
+)
 
 with st.expander("¿Qué hace esta aplicación?", expanded=True):
     st.markdown(
@@ -114,6 +125,28 @@ try:
 except Exception as e:
     st.error(f"Error al cargar los datos de Google Drive: {e}")
     st.stop()
+
+actores_con_creditos = sum(
+    1 for node, attrs in G.nodes(data=True)
+    if attrs.get("type") == "person" and G.degree(node) > 0
+)
+total_peliculas = sum(1 for _, attrs in G.nodes(data=True) if attrs.get("type") == "movie")
+anios_estreno = pd.to_numeric(
+    pd.Series([attrs.get("year") for _, attrs in G.nodes(data=True) if attrs.get("type") == "movie"]),
+    errors="coerce",
+).dropna()
+formato_cifra = lambda valor: f"{valor:,}".replace(",", ".")
+
+with metricas_portada.container():
+    metrica_actores, metrica_peliculas, metrica_anios, metrica_conexiones = st.columns(4)
+    metrica_actores.metric("Actores", formato_cifra(actores_con_creditos))
+    metrica_peliculas.metric("Películas", formato_cifra(total_peliculas))
+    metrica_anios.metric(
+        "Años de estreno",
+        f"{int(anios_estreno.min())}–{int(anios_estreno.max())}",
+        help="El año 2115 corresponde a 100 Years, catalogada para estrenarse en ese año.",
+    )
+    metrica_conexiones.metric("Conexiones actor-película", formato_cifra(G.number_of_edges()))
 
 # Búsqueda rápida y pulida con autocompletado en tiempo real.
 NOMBRES_ACTORES = sorted(set_actores)
