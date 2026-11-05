@@ -38,9 +38,6 @@ with st.sidebar.expander("🧰 Tecnologías, herramientas y recursos", expanded=
         - [Pandas](https://pandas.pydata.org/): manipulación y análisis de datos tabulares.
         - [NetworkX](https://networkx.org/): librería para modelar y recorrer grafos.
         - [PyVis](https://pyvis.readthedocs.io/): visualización interactiva de redes y grafos.
-        - [Movies CSV](https://drive.google.com/file/d/1ACd7kKcMPBSIDwdDcT5pTY7k2HmbALjG/view?usp=sharing): archivo con información de películas.
-        - [People CSV](https://drive.google.com/file/d/1FVlEcggtRw1IOKB_mLiLIIf-h2bSBwsH/view?usp=sharing): archivo con información de personas y actores.
-        - [Stars CSV](https://drive.google.com/file/d/10mp7ybqTJyIt6XPrGUG_L1ABamcwQJ_z/view?usp=sharing): archivo con relaciones entre actores y películas.
         - Dataset original: [IMDb Co-star Network. The Kevin Bacon Game: Finding Six Degrees of Separation in Movie Data](https://www.kaggle.com/datasets/parthparmar06/imdb-co-star-network).
         - [requirements.txt](https://github.com/rufuscreeley/Kevin-Bacon-ARS/blob/main/requirements.txt): dependencias del proyecto.
         """
