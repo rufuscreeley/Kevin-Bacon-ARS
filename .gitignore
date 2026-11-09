@@ -3,7 +3,9 @@ __pycache__/
 *.pyo
 *.pyd
 *.html
+!site/index.html
 *.log
+_site/
 .venv/
 .env
 .streamlit/

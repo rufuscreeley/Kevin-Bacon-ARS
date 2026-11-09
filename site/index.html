@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Explora las conexiones entre actores de cine con el proyecto Kevin Bacon y la regla de los seis grados de separación.">
+    <title>Kevin Bacon Project</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+          <h2>ℹ️ Sobre el proyecto</h2>
+          <p>Este proyecto ha sido desarrollado por <a href="https://scholar.google.es/citations?user=VxjO4dMAAAAJ&amp;hl=es" target="_blank" rel="noreferrer">Rafael Carrasco</a>, profesor de Periodismo de la Universidad Complutense de Madrid.</p>
+          <p>Explora cómo están conectados los actores a través de las películas en las que han coincidido.</p>
+          <p>La idea es visualizar redes de colaboración cinematográfica y responder preguntas del tipo:</p>
+          <ul>
+            <li>¿Qué tan cerca están dos actores?</li>
+            <li>¿Qué películas unen a dos personas?</li>
+            <li>¿Cómo se relaciona un actor con el resto del universo de cine?</li>
+          </ul>
+
+          <details class="sidebar-details">
+            <summary>🧰 Tecnologías, herramientas y recursos</summary>
+            <ul>
+              <li><a href="https://www.python.org/" target="_blank" rel="noreferrer">Python</a>: preparación de los datos.</li>
+              <li><a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noreferrer">JavaScript</a>: consultas y visualización interactiva en el navegador.</li>
+              <li><a href="https://networkx.org/" target="_blank" rel="noreferrer">NetworkX</a>: referencia para el modelo de grafo y los caminos mínimos.</li>
+              <li><a href="https://pyvis.readthedocs.io/" target="_blank" rel="noreferrer">PyVis</a>: referencia visual de las redes de actores y películas.</li>
+              <li>Dataset original: <a href="https://www.kaggle.com/datasets/parthparmar06/imdb-co-star-network" target="_blank" rel="noreferrer">IMDb Co-star Network. The Kevin Bacon Game: Finding Six Degrees of Separation in Movie Data</a>.</li>
+              <li><a href="https://github.com/rufuscreeley/Kevin-Bacon-ARS/blob/main/requirements.txt" target="_blank" rel="noreferrer">requirements.txt</a>: dependencias de la aplicación Streamlit original.</li>
+            </ul>
+          </details>
+
+          <div class="license">
+            <hr>
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer" aria-label="Licencia Creative Commons Atribución-CompartirIgual 4.0">
+              <img src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" alt="Licencia Creative Commons">
+            </a>
+            <p>Este proyecto está bajo una <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">Licencia Creative Commons Atribución-CompartirIgual 4.0 Internacional</a>.</p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Mostrar u ocultar información del proyecto" aria-expanded="false">☰</button>
+          <img class="portrait" src="https://hips.hearstapps.com/hmg-prod/images/kevin-bacon-azul-1592514957.jpg?crop=0.668xw:1.00xh;0.187xw,0&amp;resize=1200:*" alt="Kevin Bacon">
+          <h1>Kevin Bacon Project</h1>
+        </header>
+        <p class="intro">Todos los caminos llevan a Kevin Bacon: explorando la <a href="https://en.wikipedia.org/wiki/Six_Degrees_of_Kevin_Bacon" target="_blank" rel="noreferrer">regla de los seis grados de separación</a> en el cine.</p>
+
+        <section class="metrics" aria-label="Métricas del conjunto de datos">
+          <article class="metric-card"><div class="metric-label">Actores</div><div class="metric-value" id="metric-actors">—</div></article>
+          <article class="metric-card"><div class="metric-label">Películas</div><div class="metric-value" id="metric-movies">—</div></article>
+          <article class="metric-card"><div class="metric-label">Años de estreno <span class="help" title="El año 2115 corresponde a 100 Years, catalogada para estrenarse en ese año.">ⓘ</span></div><div class="metric-value" id="metric-years">—</div></article>
+          <article class="metric-card"><div class="metric-label">Conexiones actor-película</div><div class="metric-value" id="metric-connections">—</div></article>
+        </section>
+
+        <section class="explainers" aria-label="Información de la aplicación">
+          <details open>
+            <summary>¿Qué hace esta aplicación?</summary>
+            <div class="details-body">
+              <p>Esta web construye un grafo de actores y películas. Cada actor está conectado a las películas en las que aparece, y cada película conecta a todos los actores que participan en ella.</p>
+              <p>A partir de ese grafo, la aplicación puede:</p>
+              <ul>
+                <li>calcular el camino más corto entre dos actores,</li>
+                <li>contar cuántos pasos los separan,</li>
+                <li>mostrar la red directa de un actor en una sola película de distancia.</li>
+              </ul>
+            </div>
+          </details>
+          <details>
+            <summary>¿Cómo se usa?</summary>
+            <div class="details-body">
+              <ol>
+                <li>Elige el modo de consulta: conectar dos actores o explorar la red de un actor.</li>
+                <li>Escribe parte del nombre del actor para ver sugerencias automáticas.</li>
+                <li>Selecciona un resultado y pulsa el botón de búsqueda.</li>
+                <li>Explora el grafo y haz zoom para ver más detalle.</li>
+              </ol>
+            </div>
+          </details>
+          <details>
+            <summary>¿Qué tipos de consultas ofrece?</summary>
+            <div class="details-body">
+              <ul>
+                <li>Conectar dos actores: muestra si están relacionados y cuántos pasos los separan.</li>
+                <li>Red de un actor: muestra los actores que están a un solo grado de separación a través de una película.</li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <section class="query-section" aria-label="Consultas de la red">
+          <div class="mode-picker" role="radiogroup" aria-label="Elige el tipo de consulta">
+            <button type="button" class="mode-option active" role="radio" aria-checked="true" data-mode="path">🔗 Conectar dos actores</button>
+            <button type="button" class="mode-option" role="radio" aria-checked="false" data-mode="network">🌐 Ver red de un actor</button>
+          </div>
+
+          <form id="path-form" class="query-form">
+            <div class="actor-fields">
+              <div class="actor-field">
+                <label for="actor-origin">1. Actor de origen</label>
+                <input id="actor-origin" name="origin" type="text" value="Tom Cruise" placeholder="Escribe el nombre del actor" autocomplete="off" spellcheck="false">
+                <div class="suggestions" id="suggestions-origin" aria-live="polite"></div>
+              </div>
+              <div class="actor-field">
+                <label for="actor-destination">2. Actor de destino</label>
+                <input id="actor-destination" name="destination" type="text" value="Kevin Bacon" placeholder="Escribe el nombre del actor" autocomplete="off" spellcheck="false">
+                <div class="suggestions" id="suggestions-destination" aria-live="polite"></div>
+              </div>
+            </div>
+            <button class="primary-button" type="submit">🔍 Conectar Actores</button>
+          </form>
+
+          <form id="network-form" class="query-form hidden">
+            <div class="actor-field">
+              <label for="actor-network">Actor a explorar</label>
+              <input id="actor-network" name="actor" type="text" value="Tom Cruise" placeholder="Escribe el nombre del actor" autocomplete="off" spellcheck="false">
+              <div class="suggestions" id="suggestions-network" aria-live="polite"></div>
+            </div>
+            <button class="primary-button" type="submit">🔍 Explorar red</button>
+          </form>
+
+          <p class="status" id="status" role="status">Cargando el índice de actores…</p>
+          <section class="result hidden" id="result" aria-live="polite"></section>
+        </section>
+
+        <footer class="page-footer">
+          <a href="https://kevin-bacon-ars.streamlit.app/" target="_blank" rel="noreferrer">Abrir aplicación Streamlit original</a>
+        </footer>
+      </main>
+    </div>
+    <script src="./network.js" defer></script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
