@@ -69,6 +69,11 @@ function main() {
   const verticalSpread = Math.max(...multiStepPositions.map((point) => point.y))
     - Math.min(...multiStepPositions.map((point) => point.y));
   assert.ok(verticalSpread > 100, "Multi-step paths should use a visible curved layout.");
+  assert.ok(
+    Math.abs(Math.min(...multiStepPositions.map((point) => point.y))
+      - (380 - Math.max(...multiStepPositions.map((point) => point.y)))) < 25,
+    "The route arc should be vertically balanced within the graph canvas.",
+  );
 
   console.log(
     `Path layout smoke test passed: direct-route curve ${Math.round(averageEndpointY - directPositions[1].y)}px; ` +

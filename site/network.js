@@ -168,12 +168,13 @@
       if (this.graph.kind === "path") {
         const radiusX = width * 0.39;
         const radiusY = height * 0.35;
+        const arcCenterY = height * 0.65;
         nodes.forEach((node, index) => {
           const progress = nodes.length === 1 ? 0.5 : index / (nodes.length - 1);
           const angle = Math.PI + Math.PI * progress;
           this.positions.set(node.id, nodes.length === 1 ? { x: centerX, y: centerY } : {
             x: centerX + Math.cos(angle) * radiusX,
-            y: centerY + Math.sin(angle) * radiusY,
+            y: arcCenterY + Math.sin(angle) * radiusY,
           });
         });
         return;
