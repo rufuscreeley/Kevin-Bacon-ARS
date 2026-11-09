@@ -40,6 +40,8 @@ jobs:
         run: python scripts/build_site.py --download-data --output _site
       - name: Validar consultas del grafo con datos reales
         run: node tests/worker-smoke.cjs _site
+      - name: Validar distribución de los caminos
+        run: node tests/network-layout-smoke.cjs
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

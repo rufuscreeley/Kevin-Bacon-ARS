@@ -166,16 +166,16 @@
       const centerY = height / 2;
       const root = nodes.find((node) => node.root);
       if (this.graph.kind === "path") {
-        const horizontalGap = Math.min(width * 0.19, 135, width * 0.76 / Math.max(1, nodes.length - 1));
-        const startX = centerX - ((nodes.length - 1) * horizontalGap) / 2;
+        const radiusX = width * 0.39;
+        const radiusY = height * 0.35;
         nodes.forEach((node, index) => {
-          const alternating = index % 2 === 0 ? -1 : 1;
-          this.positions.set(node.id, {
-            x: startX + index * horizontalGap,
-            y: centerY + alternating * Math.min(22, height * 0.055),
+          const progress = nodes.length === 1 ? 0.5 : index / (nodes.length - 1);
+          const angle = Math.PI + Math.PI * progress;
+          this.positions.set(node.id, nodes.length === 1 ? { x: centerX, y: centerY } : {
+            x: centerX + Math.cos(angle) * radiusX,
+            y: centerY + Math.sin(angle) * radiusY,
           });
         });
-        this.applyPhysics();
         return;
       }
 
@@ -327,7 +327,11 @@
           context.fillStyle = "#ffc107";
         } else {
           context.arc(position.x, position.y, selected ? 11 : 9, 0, Math.PI * 2);
-          context.fillStyle = node.root ? "#28a745" : "#007bff";
+          context.fillStyle = node.origin || node.root
+            ? "#28a745"
+            : node.destination
+              ? "#dc3545"
+              : "#007bff";
         }
         context.fill();
         if (selected) {
