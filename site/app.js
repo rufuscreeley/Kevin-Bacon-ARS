@@ -138,7 +138,9 @@
     result.append(container);
     const legend = document.createElement("div");
     legend.className = "graph-legend";
-    legend.innerHTML = '<span class="legend-item"><span class="legend-dot"></span>Actor</span><span class="legend-item"><span class="legend-triangle"></span>Película</span>';
+    legend.innerHTML = graph.kind === "path"
+      ? '<span class="legend-item"><span class="legend-dot origin"></span>Actor de origen</span><span class="legend-item"><span class="legend-dot destination"></span>Actor de destino</span><span class="legend-item"><span class="legend-triangle"></span>Película</span>'
+      : '<span class="legend-item"><span class="legend-dot"></span>Actor</span><span class="legend-item"><span class="legend-triangle"></span>Película</span>';
     result.append(legend);
     window.requestAnimationFrame(() => new window.NetworkView(container, graph));
   }

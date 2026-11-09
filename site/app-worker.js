@@ -138,7 +138,11 @@ function shortestPath(source, destination) {
 function queryPath(source, destination, originName, destinationName) {
   const path = shortestPath(source, destination);
   if (!path) return { kind: "path", connected: false, originName, destinationName };
-  const nodes = path.map((id) => describeNode(id, null));
+  const nodes = path.map((id, index) => ({
+    ...describeNode(id, null),
+    origin: index === 0,
+    destination: index === path.length - 1,
+  }));
   const edges = path.slice(1).map((id, index) => [path[index], id]);
   const bridges = path.slice(1, -1)
     .filter((id) => id < graph.personCount)

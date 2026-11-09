@@ -202,6 +202,7 @@ h1 { margin: 0; font-size: 2.25rem; line-height: 1.2; letter-spacing: -0.02em; }
 .legend-item { display: inline-flex; align-items: center; gap: 0.35rem; }
 .legend-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #007bff; }
 .legend-dot.origin { background: #28a745; }
+.legend-dot.destination { background: #dc3545; }
 .legend-triangle { width: 0; height: 0; border-right: 0.42rem solid transparent; border-left: 0.42rem solid transparent; border-bottom: 0.8rem solid #ffc107; }
 .page-footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #e6e9ef; font-size: 0.9rem; }
 .hidden { display: none !important; }
